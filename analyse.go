@@ -54,11 +54,13 @@ func (w *graphVisitor) Visit(v ast.Elem) ast.Visitor {
 	w.g.SetDir(graph.Type == ast.DIGRAPH)
 	graphName := graph.ID.String()
 	w.g.SetName(graphName)
-	return newStmtVisitor(w.g, graphName)
+	return newStmtVisitor(w.g, graphName, nil, nil)
 }
 
-func newStmtVisitor(g errInterface, graphName string) *stmtVisitor {
-	return &stmtVisitor{g, graphName, make(map[string]string), make(map[string]string), make(map[string]string)}
+func newStmtVisitor(g errInterface, graphName string, nodeAttrs, edgeAttrs map[string]string) *stmtVisitor {
+	nodeAttrs = ammend(make(map[string]string), nodeAttrs)
+	edgeAttrs = ammend(make(map[string]string), edgeAttrs)
+	return &stmtVisitor{g, graphName, nodeAttrs, edgeAttrs, make(map[string]string)}
 }
 
 type stmtVisitor struct {
@@ -162,7 +164,7 @@ func (w *stmtVisitor) graphAttrs(stmt ast.GraphAttrs) ast.Visitor {
 func (w *stmtVisitor) subGraph(stmt *ast.SubGraph) ast.Visitor {
 	subGraphName := stmt.ID.String()
 	w.g.AddSubGraph(w.graphName, subGraphName, w.currentGraphAttrs)
-	return newStmtVisitor(w.g, subGraphName)
+	return newStmtVisitor(w.g, subGraphName, w.currentNodeAttrs, w.currentEdgeAttrs)
 }
 
 func (w *stmtVisitor) attr(stmt *ast.Attr) ast.Visitor {
